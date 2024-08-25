@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GK Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            color: #333;
+        }
+        .quiz-container {
+            width: 80%;
+            max-width: 600px;
+            background-color: white;
+            margin: 50px auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        #timer {
+            font-size: 24px;
+            color: #f44336;
+            margin-bottom: 20px;
+        }
+        #question {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        #options button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
+            width: 100%;
+            font-size: 16px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #options button.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #options button:hover {
+            background-color: #e0e0e0;
+        }
+        .controls button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .controls button:hover {
+            background-color: #45a049;
+        }
+        .hidden {
+            display: none;
+        }
+        #result {
+            font-size: 24px;
+            margin-top: 20px;
+            color: #4CAF50;
+        }
+        #summary {
+            text-align: left;
+            margin-top: 20px;
+        }
+        #summary p {
+            margin: 5px 0;
+        }
+        #summary button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            background-color: #f44336;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #summary button:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body onload="startQuiz()">
+    <div class="quiz-container">
+        <h1>GK Quiz</h1>
+        <div id="timer">30</div>
+        <div id="question-container">
+            <div id="question"></div>
+            <div id="options"></div>
+        </div>
+        <div class="controls">
+            <button onclick="prevQuestion()">Previous</button>
+            <button onclick="nextQuestion()">Next</button>
+        </div>
+        <div id="result" class="hidden">
+            <div id="score"></div>
+            <button onclick="viewSummary()">View Summary</button>
+            <button onclick="restartQuiz()">Restart Quiz</button>
+        </div>
+        <div id="summary" class="hidden"></div>
+    </div>
+
+    <script>
+        const questions = [
+    { question: 'What is the capital of Kerala?', options: ['Kochi', 'Thiruvananthapuram', 'Kozhikode', 'Palakkad'], answer: 1 },
+    { question: 'Which river is known as the "Ganges of Kerala"?', options: ['Periyar', 'Bharathapuzha', 'Pamba', 'Chalakudy'], answer: 1 },
+    { question: 'Which festival is celebrated with boat races in Kerala?', options: ['Onam', 'Vishu', 'Pongal', 'Navratri'], answer: 0 },
+    { question: 'What is the traditional dance form of Kerala performed with colorful masks and elaborate costumes?', options: ['Kathakali', 'Mohiniyattam', 'Bharatanatyam', 'Kuchipudi'], answer: 0 },
+    { question: 'Which type of cuisine is Kerala famous for?', options: ['North Indian', 'Punjabi', 'South Indian', 'Chinese'], answer: 2 },
+    { question: 'Which hill station in Kerala is known for its tea gardens?', options: ['Munnar', 'Wayanad', 'Thekkady', 'Vagamon'], answer: 0 },
+    { question: 'What is the name of the backwater region in Kerala known for houseboat cruises?', options: ['Kumarakom', 'Alleppey', 'Vypin', 'Edapally'], answer: 1 },
+    { question: 'Which Kerala-based film festival is known for its focus on international cinema?', options: ['Cochin International Film Festival', 'Kerala International Film Festival', 'Thiruvananthapuram Film Festival', 'Kochi-Muziris Biennale'], answer: 1 },
+    { question: 'What is the main language spoken in Kerala?', options: ['Tamil', 'Telugu', 'Malayalam', 'Kannada'], answer: 2 },
+    { question: 'Which Kerala beach is known for its scenic beauty and serene environment?', options: ['Kovalam Beach', 'Cherai Beach', 'Varkala Beach', 'Alleppey Beach'], answer: 0 }
+];
+
+
+        var currentQuestionIndex = 0;
+        var selectedOptions = [];
+        var score = 0;
+        var timeLeft = 30;
+        var timer;
+
+        function startQuiz() {
+            resetQuiz();
+            loadQuestion();
+            startTimer();
+        }
+
+        function startTimer() {
+            timer = setInterval(function() {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    endQuiz();
+                }
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            var questionData = questions[currentQuestionIndex];
+            document.getElementById('question').textContent = questionData.question;
+            var optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+
+            for (var i = 0; i < questionData.options.length; i++) {
+                var button = document.createElement('button');
+                button.textContent = questionData.options[i];
+                if (selectedOptions[currentQuestionIndex] === i) {
+                    button.classList.add('selected');
+                }
+                button.onclick = (function(index) {
+                    return function() {
+                        selectOption(index);
+                    };
+                })(i);
+                optionsContainer.appendChild(button);
+            }
+        }
+
+        function selectOption(index) {
+            selectedOptions[currentQuestionIndex] = index;
+            loadQuestion();  
+        }
+
+        function nextQuestion() {
+            var questionData = questions[currentQuestionIndex];
+
+            if (selectedOptions[currentQuestionIndex] === questionData.answer) {
+                score++;
+            }
+
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                timeLeft = 30;
+                loadQuestion();
+            } else {
+                endQuiz();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion();
+            }
+        }
+
+        function endQuiz() {
+            clearInterval(timer);
+            document.getElementById('question-container').style.display = 'none';
+            document.querySelector('.controls').style.display = 'none';
+            document.getElementById('result').classList.remove('hidden');
+            document.getElementById('score').textContent = 'Your score: ' + score + '/' + questions.length;
+        }
+
+        function viewSummary() {
+            var summaryContainer = document.getElementById('summary');
+            summaryContainer.innerHTML = '<h2>Quiz Summary</h2>';
+
+            for (var i = 0; i < questions.length; i++) {
+                var question = questions[i];
+                var userAnswer = selectedOptions[i] !== undefined ? question.options[selectedOptions[i]] : 'Not answered';
+                var correctAnswer = question.options[question.answer];
+
+                summaryContainer.innerHTML += '<p><strong>Question:</strong> ' + question.question + '<br>' +
+                                              '<strong>Correct Answer:</strong> ' + correctAnswer + '<br>' +
+                                              '<strong>Your Answer:</strong> ' + userAnswer + '</p>';
+            }
+
+            summaryContainer.classList.remove('hidden');
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            selectedOptions = [];
+            score = 0;
+            timeLeft = 30;
+            document.getElementById('question-container').style.display = 'block';
+            document.querySelector('.controls').style.display = 'block';
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('summary').classList.add('hidden');
+            startQuiz();
+        }
+
+        function resetQuiz() {
+            clearInterval(timer);
+            timeLeft = 30;
+            document.getElementById('timer').textContent = timeLeft;
+        }
+    </script>
+</body>
+</html>
